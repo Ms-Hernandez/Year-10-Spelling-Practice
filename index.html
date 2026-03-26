@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NCEA Literacy: 60-Item Spelling Assessment</title>
+    <style>
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { background: white; width: 100%; max-width: 900px; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 8px solid var(--primary); }
+        
+        /* Login */
+        #login-screen { text-align: center; padding: 50px; }
+        .login-input { padding: 15px; font-size: 18px; width: 300px; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 20px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .cheat-badge { color: var(--danger); font-weight: bold; background: #fff5f5; padding: 5px 12px; border-radius: 20px; border: 1px solid #feb2b2; }
+        .timer { font-size: 20px; font-weight: bold; color: var(--primary); }
+
+        .quiz-area { text-align: center; min-height: 300px; display: none; flex-direction: column; justify-content: center; }
+        .audio-btn { background: var(--accent); color: white; border: none; width: 70px; height: 70px; border-radius: 50%; font-size: 28px; cursor: pointer; margin-bottom: 20px; transition: 0.2s; }
+        .audio-btn:hover { transform: scale(1.1); }
+
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 10px; max-width: 400px; margin: 0 auto; }
+        .opt-btn { padding: 15px; border: 2px solid #ddd; border-radius: 8px; background: white; font-size: 18px; cursor: pointer; }
+        .type-input { width: 80%; max-width: 400px; margin: 20px auto; padding: 15px; font-size: 22px; text-align: center; border: 3px solid #eee; border-radius: 10px; }
+        .submit-btn { background: var(--primary); color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+
+        /* Summary Table */
+        #summary { display: none; }
+        .review-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+        .review-table th, .review-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .review-table th { background: #f8f9fa; }
+        .status-icon { font-weight: bold; }
+        .row-correct { color: var(--success); }
+        .row-wrong { color: var(--danger); background: #fffafa; }
+
+        @media print { .submit-btn, .audio-btn { display: none; } .container { box-shadow: none; border: none; width: 100%; max-width: 100%; } }
+    </style>
+</head>
+<body onblur="reportCheat()">
+
+<div class="container">
+    <div id="login-screen">
+        <h1>NCEA Spelling Assessment (2026)</h1>
+        <p>Enter your full name to start the 50-minute test.</p>
+        <input type="text" id="studentNameInput" class="login-input" placeholder="Full Name..." required>
+        <br>
+        <button class="submit-btn" onclick="startAssessment()">Begin Test</button>
+    </div>
+
+    <div id="quiz-ui" style="display:none;">
+        <div class="header">
+            <div><strong>Student:</strong> <span id="displayName"></span><br><span id="stageName">Stage 1</span></div>
+            <div class="timer" id="timerDisplay">50:00</div>
+            <div class="cheat-badge">Tab Swaps: <span id="cheatVal">0</span></div>
+        </div>
+        <div class="quiz-area" id="mainArea" style="display:flex;">
+            <p id="progressText">Item 1 / 60</p>
+            <button class="audio-btn" onclick="playAudio()">🔊</button>
+            <div id="interaction-area"></div>
+        </div>
+    </div>
+
+    <div id="summary">
+        <h1 style="text-align:center;">Official Assessment Report</h1>
+        <div style="background:#f8f9fa; padding:20px; border-radius:10px; margin-bottom:20px;">
+            <p><strong>Student:</strong> <span id="sumName"></span></p>
+            <p><strong>Final Score:</strong> <span id="finalTotal" style="font-size:24px; color:var(--success); font-weight:bold;"></span></p>
+            <p id="integrityStatus"></p>
+            <p><strong>Date:</strong> <span id="dateStamp"></span></p>
+        </div>
+
+        <h3>Full Item Review</h3>
+        <table class="review-table" id="reviewTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Result</th>
+                    <th>Your Answer</th>
+                    <th>Correct Spelling</th>
+                </tr>
+            </thead>
+            <tbody id="reviewBody"></tbody>
+        </table>
+        <br>
+        <button onclick="window.print()" class="submit-btn" style="width:100%; background:var(--success)">Print Report / Save as PDF</button>
+    </div>
+</div>
+
+<script>
+    const easyData = [{word:"believe",opts:["beleive","believe","beleeve"]},{word:"different",opts:["different","diferent","diffarent"]},{word:"business",opts:["buisness","business","busines"]},{word:"possible",opts:["posible","possible","possable"]},{word:"important",opts:["important","importent","importent"]},{word:"probably",opts:["probly","probably","probubly"]},{word:"interest",opts:["interest","intrest","interrest"]},{word:"general",opts:["genral","general","generel"]},{word:"describe",opts:["describe","discribe","descibe"]},{word:"certain",opts:["certan","certain","sertain"]},{word:"imagine",opts:["imagine","imagin","emagine"]},{word:"minute",opts:["minit","minnut","minute"]},{word:"question",opts:["question","queshon","queshun"]},{word:"reason",opts:["reason","reeson","resun"]},{word:"though",opts:["thogh","though","thouh"]},{word:"special",opts:["special","speical","speshul"]},{word:"usually",opts:["usualy","usually","usuelly"]},{word:"caught",opts:["caught","cort","cauht"]},{word:"brought",opts:["brought","brort","browt"]},{word:"enough",opts:["enuff","enough","enuf"]}];
+    const avgWords = ["necessary","government","environment","recommendation","definitely","success","immediately","accommodation","beginning","disappear","occasion","parallel","possession","separate","sincerely","surprise","tomorrow","writing","address","apparent"];
+    const diffWords = ["perspective","stationery","exaggerate","embarrass","consequently","alternative","appropriate","consistent","evidence","identify","significant","technique","evaluate","frequency","individual","legislation","occurrence","principle","guarantee","rhythm"];
+
+    let currentIndex = 0, cheats = 0, timer = 3000, resultsLog = [];
+    const s1 = shuffle([...easyData]), s2 = shuffle([...avgWords]), s3 = shuffle([...diffWords]);
+
+    function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
+
+    function startAssessment() {
+        const n = document.getElementById('studentNameInput').value.trim();
+        if(!n) return alert("Enter Name");
+        document.getElementById('displayName').innerText = n;
+        document.getElementById('sumName').innerText = n;
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('quiz-ui').style.display='block';
+        setInterval(() => {
+            timer--;
+            let m=Math.floor(timer/60), s=timer%60;
+            document.getElementById('timerDisplay').innerText=`${m}:${s<10?'0':''}${s}`;
+            if(timer<=0) showSummary();
+        }, 1000);
+        loadItem();
+    }
+
+    function playAudio() {
+        let w = currentIndex<20?s1[currentIndex].word:(currentIndex<40?s2[currentIndex-20]:s3[currentIndex-40]);
+        const m = new SpeechSynthesisUtterance(w); m.rate=0.8; window.speechSynthesis.speak(m);
+    }
+
+    function loadItem() {
+        const area = document.getElementById('interaction-area'), name = document.getElementById('stageName');
+        document.getElementById('progressText').innerText=`Item ${currentIndex+1} / 60`;
+        if(currentIndex<20) {
+            name.innerText="Stage 1: Easy";
+            let c = shuffle([...s1[currentIndex].opts]);
+            area.innerHTML=`<div class="options-grid">${c.map(opt=>`<button class="opt-btn" onclick="logE('${opt}')">${opt}</button>`).join('')}</div>`;
+        } else {
+            name.innerText=currentIndex<40?"Stage 2: Average":"Stage 3: Difficult";
+            area.innerHTML=`<input type="text" id="typeIn" class="type-input" placeholder="Type..." autocomplete="off" onkeydown="if(event.key==='Enter') logT()"><br><button class="submit-btn" onclick="logT()">Submit Answer</button>`;
+            document.getElementById('typeIn').focus();
+        }
+    }
+
+    function logE(choice) {
+        resultsLog.push({correct: s1[currentIndex].word, user: choice, isRight: choice===s1[currentIndex].word});
+        advance();
+    }
+
+    function logT() {
+        const v = document.getElementById('typeIn').value.toLowerCase().trim();
+        const correct = currentIndex<40?s2[currentIndex-20]:s3[currentIndex-40];
+        resultsLog.push({correct: correct, user: v || "(No Answer)", isRight: v===correct});
+        advance();
+    }
+
+    function advance() { currentIndex++; if(currentIndex<60) loadItem(); else showSummary(); }
+    function reportCheat() { cheats++; document.getElementById('cheatVal').innerText=cheats; }
+
+    function showSummary() {
+        document.getElementById('quiz-ui').style.display="none";
+        document.getElementById('summary').style.display="block";
+        const totalRight = resultsLog.filter(r=>r.isRight).length;
+        document.getElementById('finalTotal').innerText=`${totalRight} / 60`;
+        document.getElementById('dateStamp').innerText=new Date().toLocaleString();
+        
+        const body = document.getElementById('reviewBody');
+        resultsLog.forEach((res, i) => {
+            const row = body.insertRow();
+            row.className = res.isRight ? 'row-correct' : 'row-wrong';
+            row.innerHTML = `<td>${i+1}</td>
+                             <td class="status-icon">${res.isRight?'✅':'❌'}</td>
+                             <td>${res.user}</td>
+                             <td><strong>${res.correct}</strong></td>`;
+        });
+        document.getElementById('integrityStatus').innerHTML=cheats>2?`<span style="color:red">⚠️ TAB SWAPS: ${cheats} (High Risk)</span>`:`<span style="color:green">✅ Integrity Score: ${cheats} Swaps</span>`;
+    }
+</script>
+</body>
+</html>
